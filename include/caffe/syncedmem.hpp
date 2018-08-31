@@ -59,7 +59,7 @@ class SyncedMemory {
   void set_gpu_data(void* data);
   void* mutable_cpu_data();
   void* mutable_gpu_data();
-  enum SyncedHead { UNINITIALIZED, HEAD_AT_CPU, HEAD_AT_GPU, SYNCED };
+  enum SyncedHead { UNINITIALIZED, HEAD_AT_CPU, HEAD_AT_GPU, SYNCED }; // 数据有四种状态：未初始化、在CPU中、在GPU中、既在CPU里也在GPU里
   SyncedHead head() { return head_; }
   size_t size() { return size_; }
 

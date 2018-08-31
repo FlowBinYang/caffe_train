@@ -21,29 +21,38 @@ class BaseConvolutionLayer : public Layer<Dtype> {
  public:
   explicit BaseConvolutionLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
+      /* 层设置函数 */
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+      /* 数据Reshape */
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
-
+           
   virtual inline int MinBottomBlobs() const { return 1; }
   virtual inline int MinTopBlobs() const { return 1; }
+      /* 判断输入输出blob个数是否相等 */
   virtual inline bool EqualNumBottomTopBlobs() const { return true; }
 
  protected:
   // Helper functions that abstract away the column buffer and gemm arguments.
   // The last argument in forward_cpu_gemm is so that we can skip the im2col if
   // we just called weight_cpu_gemm with the same input.
+      /*CPU前向传播的卷积操作*/
   void forward_cpu_gemm(const Dtype* input, const Dtype* weights,
       Dtype* output, bool skip_im2col = false);
+      /*CPU前向传播的卷积操作后加上bias偏置项*/
   void forward_cpu_bias(Dtype* output, const Dtype* bias);
+      /*CPU反向传播求数据导数*/
   void backward_cpu_gemm(const Dtype* input, const Dtype* weights,
       Dtype* output);
+      /*CPU反向传播求权重导数*/
   void weight_cpu_gemm(const Dtype* input, const Dtype* output, Dtype*
       weights);
+      /*CPU反向传播求偏置导数*/
   void backward_cpu_bias(Dtype* bias, const Dtype* input);
 
 #ifndef CPU_ONLY
+    //GPU实现
   void forward_gpu_gemm(const Dtype* col_input, const Dtype* weights,
       Dtype* output, bool skip_im2col = false);
   void forward_gpu_bias(Dtype* output, const Dtype* bias);
@@ -70,33 +79,37 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   Blob<int> stride_;
   /// @brief The spatial dimensions of the padding.
   Blob<int> pad_;
-  /// @brief The spatial dimensions of the dilation.
+  /// @brief The spatial dimensions of the dilation. 
+  ///卷积核膨胀操作：https://blog.csdn.net/jiongnima/article/details/69487519
   Blob<int> dilation_;
   /// @brief The spatial dimensions of the convolution input.
+  ///卷积的输入形状 = [输入图像通道数、输入图像高度h、输入图像宽度w]
   Blob<int> conv_input_shape_;
   /// @brief The spatial dimensions of the col_buffer.
+  ///col_buffer:[kernel_dim, conv_out_spatial_dim_]
   vector<int> col_buffer_shape_;
   /// @brief The spatial dimensions of the output.
   vector<int> output_shape_;
   const vector<int>* bottom_shape_;
+ 
+  int num_spatial_axes_;    ///空间轴个数
+  int bottom_dim_;          ///输入维度： 输入图像通道数×输入图像高度×输入图像宽度
+  int top_dim_;             ///输出维度
 
-  int num_spatial_axes_;
-  int bottom_dim_;
-  int top_dim_;
-
-  int channel_axis_;
-  int num_;
-  int channels_;
-  int group_;
-  int out_spatial_dim_;
-  int weight_offset_;
-  int num_output_;
-  bool bias_term_;
-  bool is_1x1_;
-  bool force_nd_im2col_;
+  int channel_axis_;        ///输入图像的第几个轴是通道
+  int num_;                 ///batchsize：一次处理的图像数
+  int channels_;            ///图像的通道数
+  int group_;               ///卷积组
+  int out_spatial_dim_;     ///输出空间维度：卷积之后的图像长×宽
+  int weight_offset_;       ///卷积进行分组的offset    weight_offset_ = conv_out_channels_ * kernel_dim_ / group_;
+  int num_output_;          ///卷积后的图像通道数
+  bool bias_term_;          ///是否启用偏置
+  bool is_1x1_;             ///是否为1×1卷积核
+  bool force_nd_im2col_;    ///强制使用n维通用卷积
 
  private:
   // wrap im2col/col2im so we don't have to remember the (long) argument lists
+  // 将卷积核在图像上的滑动转换为了矩阵
   inline void conv_im2col_cpu(const Dtype* data, Dtype* col_buff) {
     if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
       im2col_cpu(data, conv_in_channels_,
@@ -111,6 +124,7 @@ class BaseConvolutionLayer : public Layer<Dtype> {
           pad_.cpu_data(), stride_.cpu_data(), dilation_.cpu_data(), col_buff);
     }
   }
+  // 将矩阵转换为图像
   inline void conv_col2im_cpu(const Dtype* col_buff, Dtype* data) {
     if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
       col2im_cpu(col_buff, conv_in_channels_,
@@ -160,15 +174,15 @@ class BaseConvolutionLayer : public Layer<Dtype> {
 
   int num_kernels_im2col_;
   int num_kernels_col2im_;
-  int conv_out_channels_;
-  int conv_in_channels_;
-  int conv_out_spatial_dim_;
-  int kernel_dim_;
-  int col_offset_;
-  int output_offset_;
+  int conv_out_channels_;      //卷积的输出通道数，在prototxt中配置
+  int conv_in_channels_;       //卷积的输入通道数，在prototxt中配置
+  int conv_out_spatial_dim_;   //卷积的输出空间维度 = 卷积后图像的h×w
+  int kernel_dim_;             //卷积核的维度 = 输入图像的维度×卷积核的h×w
+  int col_offset_;             //group参数时的offset
+  int output_offset_;          //group参数时的offset
 
-  Blob<Dtype> col_buffer_;
-  Blob<Dtype> bias_multiplier_;
+  Blob<Dtype> col_buffer_;     //im2col的时候使用的存储空间
+  Blob<Dtype> bias_multiplier_;//将偏置扩展为矩阵
 };
 
 }  // namespace caffe

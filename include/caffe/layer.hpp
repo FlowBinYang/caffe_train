@@ -20,9 +20,11 @@ namespace boost { class mutex; }
 namespace caffe {
 
 /**
- * @brief An interface for the units of computation which can be composed into a
+ * @brief An interface for the units of computation which can be composed =into a
  *        Net.
- *
+ 
+ * 层Layer需要设置前传和反传函数
+ * 
  * Layer%s must implement a Forward function, in which they take their input
  * (bottom) Blob%s (if any) and compute their output Blob%s (if any).
  * They may also implement a Backward function, in which they compute the error

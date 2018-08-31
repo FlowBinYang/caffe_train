@@ -22,12 +22,14 @@ void ConvolutionLayer<Dtype>::compute_output_shape() {
 }
 
 template <typename Dtype>
-void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,  // 输入输出图像Blob数据
       const vector<Blob<Dtype>*>& top) {
-  const Dtype* weight = this->blobs_[0]->cpu_data();
+  const Dtype* weight = this->blobs_[0]->cpu_data();     //const Dtype* cpu_data() const;
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
+    
+    // num_ = batchsize
     for (int n = 0; n < this->num_; ++n) {
       this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight,
           top_data + n * this->top_dim_);

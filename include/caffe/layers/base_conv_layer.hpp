@@ -1,6 +1,8 @@
 #ifndef CAFFE_BASE_CONVOLUTION_LAYER_HPP_
 #define CAFFE_BASE_CONVOLUTION_LAYER_HPP_
 
+// ConvolutionLayer的父类
+
 #include <vector>
 
 #include "caffe/blob.hpp"

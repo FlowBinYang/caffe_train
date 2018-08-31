@@ -128,6 +128,10 @@ void SyncedMemory::set_gpu_data(void* data) {
 }
 
 // 数据同步到CPU，返回CPU内存数据指针，数据状态处于CPU
+// mutable在这里表示“易变的”，cpu_data()可以理解为const的，mutable_cpu_data()可以理解为非const的。
+// mutable_cpu_data()取得的数据指针意味着接下来的数据将被改变，所以将head_设置为CPU状态下，这个标志位意味着最新的数据块在CPU内存中
+// 如果接下来要调用gpu_data()或mutable_gpu_data()，那么将会从内存拷贝一份最新的数据到显存中，实现内存到显存数据的同步。
+// 这个例子很好的验证了上述的data传递方向：https://blog.csdn.net/csuhoward/article/details/53101414
 void* SyncedMemory::mutable_cpu_data() {
   to_cpu();
   head_ = HEAD_AT_CPU;

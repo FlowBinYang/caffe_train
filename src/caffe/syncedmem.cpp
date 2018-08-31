@@ -22,6 +22,9 @@ SyncedMemory::~SyncedMemory() {
 #endif  // CPU_ONLY
 }
 
+// 如果第一次初始化，就使用CaffeMallocHost()函数初始化分配CPU内存
+// 如果数据处在GPU状态，如果是GPU模式就分配CPU内存，把GPU内存数据拷贝到CPU
+// 如果数据处在CPU状态或者已经同步，则不处理，总而言之就是将数据同步到CPU
 inline void SyncedMemory::to_cpu() {
   switch (head_) {
   case UNINITIALIZED:
@@ -48,6 +51,7 @@ inline void SyncedMemory::to_cpu() {
   }
 }
 
+// 将数据同步到GPU
 inline void SyncedMemory::to_gpu() {
 #ifndef CPU_ONLY
   switch (head_) {
@@ -76,6 +80,7 @@ inline void SyncedMemory::to_gpu() {
 #endif
 }
 
+// 数据同步到CPU，返回CPU内存数据指针
 const void* SyncedMemory::cpu_data() {
   to_cpu();
   return (const void*)cpu_ptr_;
@@ -91,6 +96,7 @@ void SyncedMemory::set_cpu_data(void* data) {
   own_cpu_data_ = false;
 }
 
+// 数据同步到GPU，返回GPU内存数据指针
 const void* SyncedMemory::gpu_data() {
 #ifndef CPU_ONLY
   to_gpu();
@@ -121,12 +127,14 @@ void SyncedMemory::set_gpu_data(void* data) {
 #endif
 }
 
+// 数据同步到CPU，返回CPU内存数据指针，数据状态处于CPU
 void* SyncedMemory::mutable_cpu_data() {
   to_cpu();
   head_ = HEAD_AT_CPU;
   return cpu_ptr_;
 }
 
+// 数据同步到GPU，返回GPU内存数据指针,数据状态处于GPU
 void* SyncedMemory::mutable_gpu_data() {
 #ifndef CPU_ONLY
   to_gpu();

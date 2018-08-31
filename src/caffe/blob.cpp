@@ -8,6 +8,7 @@
 
 namespace caffe {
 
+// 老版reshape方法，弃用
 template <typename Dtype>
 void Blob<Dtype>::Reshape(const int num, const int channels, const int height,
     const int width) {
@@ -19,13 +20,14 @@ void Blob<Dtype>::Reshape(const int num, const int channels, const int height,
   Reshape(shape);
 }
 
+// reshape Blob形状
 template <typename Dtype>
 void Blob<Dtype>::Reshape(const vector<int>& shape) {
-  CHECK_LE(shape.size(), kMaxBlobAxes);
+  CHECK_LE(shape.size(), kMaxBlobAxes);             // 是否小于规定的最大Blob维度（kMaxBlobAxes = 32）
   count_ = 1;
-  shape_.resize(shape.size());
+  shape_.resize(shape.size());                      // https://msdn.microsoft.com/zh-cn/library/wezs0zy6.aspx
   if (!shape_data_ || shape_data_->size() < shape.size() * sizeof(int)) {
-    shape_data_.reset(new SyncedMemory(shape.size() * sizeof(int)));
+    shape_data_.reset(new SyncedMemory(shape.size() * sizeof(int)));        //shape_data_是旧版的存储shape形状的变量
   }
   int* shape_data = static_cast<int*>(shape_data_->mutable_cpu_data());
   for (int i = 0; i < shape.size(); ++i) {
@@ -33,17 +35,18 @@ void Blob<Dtype>::Reshape(const vector<int>& shape) {
     if (count_ != 0) {
       CHECK_LE(shape[i], INT_MAX / count_) << "blob size exceeds INT_MAX";
     }
-    count_ *= shape[i];
-    shape_[i] = shape[i];
-    shape_data[i] = shape[i];
+    count_ *= shape[i];                     // for循环中计算总的数据个数
+    shape_[i] = shape[i];                   // vector<int> shape_;
+    shape_data[i] = shape[i];               
   }
   if (count_ > capacity_) {
     capacity_ = count_;
-    data_.reset(new SyncedMemory(capacity_ * sizeof(Dtype)));
-    diff_.reset(new SyncedMemory(capacity_ * sizeof(Dtype)));
+    data_.reset(new SyncedMemory(capacity_ * sizeof(Dtype)));       // 重新分配内存
+    diff_.reset(new SyncedMemory(capacity_ * sizeof(Dtype)));       // 重新分配内存
   }
 }
 
+// 复制shape的数据然后Reshape为shape的形状，仅仅复制了blob形状的数据，没有复制data
 template <typename Dtype>
 void Blob<Dtype>::Reshape(const BlobShape& shape) {
   CHECK_LE(shape.dim_size(), kMaxBlobAxes);
@@ -54,6 +57,7 @@ void Blob<Dtype>::Reshape(const BlobShape& shape) {
   Reshape(shape_vec);
 }
 
+// 根据其他Blob来修改Blob形状
 template <typename Dtype>
 void Blob<Dtype>::ReshapeLike(const Blob<Dtype>& other) {
   Reshape(other.shape());
@@ -63,7 +67,7 @@ template <typename Dtype>
 Blob<Dtype>::Blob(const int num, const int channels, const int height,
     const int width)
   // capacity_ must be initialized before calling Reshape
-  : capacity_(0) {
+  : capacity_(0) {                          // 先初始化容量为0，然后用Reshape来分配内存
   Reshape(num, channels, height, width);
 }
 
@@ -74,48 +78,55 @@ Blob<Dtype>::Blob(const vector<int>& shape)
   Reshape(shape);
 }
 
+// 返回gpu中blob数据的内存地址(int*)
 template <typename Dtype>
 const int* Blob<Dtype>::gpu_shape() const {
   CHECK(shape_data_);
-  return (const int*)shape_data_->gpu_data();
+  return (const int*)shape_data_->gpu_data();   // shared_ptr<SyncedMemory> shape_data_; gpu_data()为SyncedMemory成员函数
 }
 
+// 返回cpu中blob数据的内存地址
 template <typename Dtype>
 const Dtype* Blob<Dtype>::cpu_data() const {
   CHECK(data_);
   return (const Dtype*)data_->cpu_data();
 }
 
+// 调用SyncedMemory的set_cpu_data()函数来设置cpu的数据的内存地址,并清空数据
 template <typename Dtype>
 void Blob<Dtype>::set_cpu_data(Dtype* data) {
   CHECK(data);
   data_->set_cpu_data(data);
 }
-
+// 返回gpu中blob数据的内存地址(Dtype*)
 template <typename Dtype>
 const Dtype* Blob<Dtype>::gpu_data() const {
   CHECK(data_);
   return (const Dtype*)data_->gpu_data();
 }
 
+// 返回cpu中blob数据导数内存地址
 template <typename Dtype>
 const Dtype* Blob<Dtype>::cpu_diff() const {
   CHECK(diff_);
   return (const Dtype*)diff_->cpu_data();
 }
 
+// 返回gpu中blob数据导数内存地址
 template <typename Dtype>
 const Dtype* Blob<Dtype>::gpu_diff() const {
   CHECK(diff_);
   return (const Dtype*)diff_->gpu_data();
 }
 
+// 调用to_cpu(), return cpu_ptr_ 
 template <typename Dtype>
 Dtype* Blob<Dtype>::mutable_cpu_data() {
   CHECK(data_);
   return static_cast<Dtype*>(data_->mutable_cpu_data());
 }
 
+// 调用to_gpu(), return gpu_ptr_
 template <typename Dtype>
 Dtype* Blob<Dtype>::mutable_gpu_data() {
   CHECK(data_);

@@ -60,9 +60,9 @@ typedef int (*BrewFunction)();
 typedef std::map<caffe::string, BrewFunction> BrewMap;
 BrewMap g_brew_map;
 
-#define RegisterBrewFunction(func) \
-namespace { \
-class __Registerer_##func { \
+#define RegisterBrewFunction(func) \                        // 这个宏在每一个实现主要功能的函数之后将这个函数的名字和对应的函数指针添加到了
+namespace { \                                               // g_brew_map中，分别为train(),test(),device_query(),time(),这里g_brew_map
+class __Registerer_##func { \                               // 的key值为argv[1]，也就是"train"
  public: /* NOLINT */ \
   __Registerer_##func() { \
     g_brew_map[#func] = &func; \
@@ -73,7 +73,7 @@ __Registerer_##func g_registerer_##func; \
 
 static BrewFunction GetBrewFunction(const caffe::string& name) {
   if (g_brew_map.count(name)) {
-    return g_brew_map[name];
+    return g_brew_map[name];                                //  
   } else {
     LOG(ERROR) << "Available caffe actions:";
     for (BrewMap::iterator it = g_brew_map.begin();
@@ -177,34 +177,34 @@ caffe::SolverAction::Enum GetRequestedAction(
 }
 
 // Train / Finetune a model.
-int train() {
-  CHECK_GT(FLAGS_solver.size(), 0) << "Need a solver definition to train.";
+int train() {                               // 主要用<Solver>类完成整个训练过程
+  CHECK_GT(FLAGS_solver.size(), 0) << "Need a solver definition to train.";  // 需要solver文件来定义训练过程
   CHECK(!FLAGS_snapshot.size() || !FLAGS_weights.size())
-      << "Give a snapshot to resume training or weights to finetune "
+      << "Give a snapshot to resume training or weights to finetune "        // snapshot和weights不可以同时出现
       "but not both.";
   vector<string> stages = get_stages_from_flags();
 
-  caffe::SolverParameter solver_param;
-  caffe::ReadSolverParamsFromTextFileOrDie(FLAGS_solver, &solver_param);
+  caffe::SolverParameter solver_param;                                       // 实例化<SolverParameter>类，用于读取solver文件
+  caffe::ReadSolverParamsFromTextFileOrDie(FLAGS_solver, &solver_param);     // 将solver文件读入solver_param
 
-  solver_param.mutable_train_state()->set_level(FLAGS_level);
+  solver_param.mutable_train_state()->set_level(FLAGS_level);                // 
   for (int i = 0; i < stages.size(); i++) {
     solver_param.mutable_train_state()->add_stage(stages[i]);
   }
 
   // If the gpus flag is not provided, allow the mode and device to be set
   // in the solver prototxt.
-  if (FLAGS_gpu.size() == 0
+  if (FLAGS_gpu.size() == 0                                                  // 根据命令行参数或者solver.prototxt设置GPU
       && solver_param.solver_mode() == caffe::SolverParameter_SolverMode_GPU) {
       if (solver_param.has_device_id()) {
           FLAGS_gpu = "" +
-              boost::lexical_cast<string>(solver_param.device_id());
+              boost::lexical_cast<string>(solver_param.device_id());         
       } else {  // Set default GPU if unspecified
-          FLAGS_gpu = "" + boost::lexical_cast<string>(0);
+          FLAGS_gpu = "" + boost::lexical_cast<string>(0);                   // boost::lexical_cast(0)是将数值0转换为字符串'“0”；
       }
   }
 
-  vector<int> gpus;
+  vector<int> gpus;         // 多GPU下，将GPU编号存入vector容器
   get_gpus(&gpus);
   if (gpus.size() == 0) {
     LOG(INFO) << "Use CPU.";
@@ -233,14 +233,14 @@ int train() {
         GetRequestedAction(FLAGS_sighup_effect));
 
   shared_ptr<caffe::Solver<float> >
-      solver(caffe::SolverRegistry<float>::CreateSolver(solver_param));
-
-  solver->SetActionFunction(signal_handler.GetActionFunction());
-
-  if (FLAGS_snapshot.size()) {
+      solver(caffe::SolverRegistry<float>::CreateSolver(solver_param));         // 创建一个Solver<float>的shared_ptr,调用成员函数时会调用到各个子类(SGDSolver)
+                                                                                // 调用SolverRegistry这个类的静态成员函数CreateSolver构造solver指针所指向的类对象空间
+  solver->SetActionFunction(signal_handler.GetActionFunction());                // solver设置操作函数
+    
+  if (FLAGS_snapshot.size()) {                                                  // 从snapshot或者caffemodel恢复模型
     LOG(INFO) << "Resuming from " << FLAGS_snapshot;
     solver->Restore(FLAGS_snapshot.c_str());
-  } else if (FLAGS_weights.size()) {
+  } else if (FLAGS_weights.size()) {                                         
     CopyLayers(solver.get(), FLAGS_weights);
   }
 
@@ -249,7 +249,7 @@ int train() {
     sync.Run(gpus);
   } else {
     LOG(INFO) << "Starting Optimization";
-    solver->Solve();
+    solver->Solve();                                                            // 初始化完成，开始优化网络
   }
   LOG(INFO) << "Optimization Done.";
   return 0;
@@ -421,8 +421,8 @@ int time() {
 }
 RegisterBrewFunction(time);
 
-int main(int argc, char** argv) {
-  // Print output to stderr (while still logging).
+int main(int argc, char** argv) {      //argc：命令行总的参数的个数,即argv中元素的格式。* argv[ ]: 字符串数组,用来存放指向你的字符串参数的指针数组,每一个元素指向一个参数
+  // Print output to stderr (while still logging).      //argv[0]:指向程序的全路径名; argv[1]:指向在DOS命令行中执行程序名后的第一个字符串; argv[2]:指向第二个字符串
   FLAGS_alsologtostderr = 1;
   // Set version
   gflags::SetVersionString(AS_STRING(CAFFE_VERSION));
@@ -439,8 +439,8 @@ int main(int argc, char** argv) {
   if (argc == 2) {
 #ifdef WITH_PYTHON_LAYER
     try {
-#endif
-      return GetBrewFunction(caffe::string(argv[1]))();
+#endif                              ///mnt/sdb/yangbin/caffe_train-master//build/tools/caffe train --solver=pose_solver.prototxt
+      return GetBrewFunction(caffe::string(argv[1]))();                 //根据上面的命令行参数 argv[1] = train
 #ifdef WITH_PYTHON_LAYER
     } catch (bp::error_already_set) {
       PyErr_Print();

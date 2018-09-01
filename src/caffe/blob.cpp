@@ -435,7 +435,7 @@ bool Blob<Dtype>::ShapeEquals(const BlobProto& other) {
   return shape_ == other_shape;
 }
 
-// 复制其他Blob
+// 复制其他Blob，从source拷贝数据，copy_diff用来区分拷贝data还是diff
 template <typename Dtype>
 void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
   if (source.count() != count_ || source.shape() != shape_) {
@@ -469,6 +469,10 @@ void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
   }
 }
 
+/*
+* Proto(Protobuf)是Google的一种结构化数据存储格式，与平台、语言无关，解析速度快。
+* 简单使用入门：https://www.cnblogs.com/autyinjing/p/6495103.html
+*/
 // 从定义在caffe.proto 中的一个message来复制数据
 template <typename Dtype>
 void Blob<Dtype>::FromProto(const BlobProto& proto, bool reshape) {

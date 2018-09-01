@@ -50,7 +50,8 @@ class Blob {
    * an error; either Net::Forward or Net::Reshape need to be called to      
    * propagate the new input shape to higher layers. 
    * 
-   * reshape一个input blob并且立即调用Net::Backward是错误的
+   * reshape一个input blob并且立即调用Net::Backward是错误的，因为reshape
+   * 之后，要么Net::forward或者Net::Reshape就会被调用来将新的input shape传播到高层
    */
   void Reshape(const vector<int>& shape);
   void Reshape(const BlobShape& shape);
@@ -283,7 +284,8 @@ class Blob {
   shared_ptr<SyncedMemory> shape_data_;  //老版本存储blob形状
   vector<int> shape_;                    //新版本存储blob形状
   int count_;                            //一维维度，即blob数据个数 = N * C * H * W
-  int capacity_;                         //元素个数，即内存最大能存储数据大小
+  int capacity_;                         //当前的Blob容量，当Blob使用reshape()后 count > capacity_时，capacity_ = count_
+                                         //见blob.cpp里Line43
   
   DISABLE_COPY_AND_ASSIGN(Blob);
 };  // class Blob

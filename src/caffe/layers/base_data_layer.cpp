@@ -12,24 +12,24 @@
 namespace caffe {
 
 template <typename Dtype>
-BaseDataLayer<Dtype>::BaseDataLayer(const LayerParameter& param)
-    : Layer<Dtype>(param),
-      transform_param_(param.transform_param()) {
-}
+BaseDataLayer<Dtype>::BaseDataLayer(const LayerParameter& param)    
+    : Layer<Dtype>(param),                           // 先用param初始化父类Layer
+      transform_param_(param.transform_param()) {    // 再初始化transform_param_ ： Blob<Dtype> transformed_data_ 转换过的blob数据,中间变量用来辅助图像变换
+}                                                    // optional TransformationParameter transform_param = 100;
 
 template <typename Dtype>
 void BaseDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  if (top.size() == 1) {
+  if (top.size() == 1) {                             // 判断是否有labels， == 1，false
     output_labels_ = false;
   } else {
     output_labels_ = true;
   }
-  data_transformer_.reset(
-      new DataTransformer<Dtype>(transform_param_, this->phase_));
-  data_transformer_->InitRand();
+  data_transformer_.reset(                           // 创建DataTransformer类的智能指针，用来预处理数据
+      new DataTransformer<Dtype>(transform_param_, this->phase_));  // shared_ptr<DataTransformer<Dtype> > data_transformer_;
+  data_transformer_->InitRand();                     // 生成随机数据种子
   // The subclasses should setup the size of bottom and top
-  DataLayerSetUp(bottom, top);
+  DataLayerSetUp(bottom, top);                       // 层数据设置
 }
 
 template <typename Dtype>
@@ -50,30 +50,32 @@ void BasePrefetchingDataLayer<Dtype>::LayerSetUp(
   // calls so that the prefetch thread does not accidentally make simultaneous
   // cudaMalloc calls when the main thread is running. In some GPUs this
   // seems to cause failures if we do not so.
+    
+  // 在开启prefetch线程之前，调用cpu_data和gpu_data，这样主线程正在运行时，prefetch线程避免同时调用cudaMalloc
   for (int i = 0; i < PREFETCH_COUNT; ++i) {
-    prefetch_[i].data_.mutable_cpu_data();
+    prefetch_[i].data_.mutable_cpu_data();          // 依次给队列中每个batch的数据blob分配cpu内存
     if (this->output_labels_) {
-      prefetch_[i].label_.mutable_cpu_data();
+      prefetch_[i].label_.mutable_cpu_data();       // 依次分配每个每个batch的标签blob分配cpu内存
     }
   }
 #ifndef CPU_ONLY
   if (Caffe::mode() == Caffe::GPU) {
     for (int i = 0; i < PREFETCH_COUNT; ++i) {
-      prefetch_[i].data_.mutable_gpu_data();
+      prefetch_[i].data_.mutable_gpu_data();        // 依次给队列中每个batch的数据blob分配gpu内存
       if (this->output_labels_) {
-        prefetch_[i].label_.mutable_gpu_data();
+        prefetch_[i].label_.mutable_gpu_data();     // 依次分配每个每个batch的标签blob分配gpu内存
       }
     }
   }
 #endif
   DLOG(INFO) << "Initializing prefetch";
   this->data_transformer_->InitRand();
-  StartInternalThread();
+  StartInternalThread();                            // 启动内部读取数据线程
   DLOG(INFO) << "Prefetch initialized.";
 }
 
 template <typename Dtype>
-void BasePrefetchingDataLayer<Dtype>::InternalThreadEntry() {
+void BasePrefetchingDataLayer<Dtype>::InternalThreadEntry() {   // 如果有空闲线程，让该线程去取数据
 #ifndef CPU_ONLY
   cudaStream_t stream;
   if (Caffe::mode() == Caffe::GPU) {

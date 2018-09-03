@@ -12,6 +12,18 @@
 #include "caffe/util/math_functions.hpp"
 
 /**
+纯虚函数：
+	virtual void Reshape(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) = 0;
+	
+	virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) = 0;
+	
+	virtual void Backward_cpu(const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
+				const vector<Blob<Dtype>*>& bottom) = 0;
+*/
+
+
+
+/**
  Forward declare boost::thread instead of including boost/thread.hpp
  to avoid a boost/NVCC issues (#1009, #1010) on OSX.
  */

@@ -12,8 +12,8 @@ template <typename Dtype>
 void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   // Configure the kernel size, padding, stride, and inputs.
-  ConvolutionParameter conv_param = this->layer_param_.convolution_param();
-  force_nd_im2col_ = conv_param.force_nd_im2col();
+  ConvolutionParameter conv_param = this->layer_param_.convolution_param();   // LayerParameter layer_param_; 配置的层参数
+  force_nd_im2col_ = conv_param.force_nd_im2col();    // im2col,一般情况下num_spatial_axes_==2,即将2维图像拉成向量，但force_nd_im2col_针对的是更general的情况n-d“图像”
   channel_axis_ = bottom[0]->CanonicalAxisIndex(conv_param.axis());
   const int first_spatial_axis = channel_axis_ + 1;
   const int num_axes = bottom[0]->num_axes();

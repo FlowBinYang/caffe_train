@@ -16,20 +16,21 @@ void ConvolutionLayer<Dtype>::compute_output_shape() {
     const int input_dim = this->input_shape(i + 1);
     const int kernel_extent = dilation_data[i] * (kernel_shape_data[i] - 1) + 1;
     const int output_dim = (input_dim + 2 * pad_data[i] - kernel_extent)
-        / stride_data[i] + 1;
+        / stride_data[i] + 1;           // 计算输出数据的尺寸
     this->output_shape_.push_back(output_dim);
   }
 }
 
+// 遍历每个blob以及每张图像进行卷积
 template <typename Dtype>
 void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   const Dtype* weight = this->blobs_[0]->cpu_data();
-  for (int i = 0; i < bottom.size(); ++i) {
+  for (int i = 0; i < bottom.size(); ++i) {               // 遍历每个blob
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
-    for (int n = 0; n < this->num_; ++n) {
-      this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight,
+    for (int n = 0; n < this->num_; ++n) {                // 遍历每张图片
+      this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight, // 前传矩阵与卷积核相乘：https://www.zhihu.com/question/28385679
           top_data + n * this->top_dim_);
       if (this->bias_term_) {
         const Dtype* bias = this->blobs_[1]->cpu_data();
@@ -42,6 +43,7 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+  // 反向传播梯度误差
   const Dtype* weight = this->blobs_[0]->cpu_data();
   Dtype* weight_diff = this->blobs_[0]->mutable_cpu_diff();
   for (int i = 0; i < top.size(); ++i) {
@@ -55,14 +57,17 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         this->backward_cpu_bias(bias_diff, top_diff + n * this->top_dim_);
       }
     }
+    // 计算weight
     if (this->param_propagate_down_[0] || propagate_down[i]) {
       for (int n = 0; n < this->num_; ++n) {
         // gradient w.r.t. weight. Note that we will accumulate diffs.
+        // 计算weight权重的梯度  
         if (this->param_propagate_down_[0]) {
           this->weight_cpu_gemm(bottom_data + n * this->bottom_dim_,
               top_diff + n * this->top_dim_, weight_diff);
         }
         // gradient w.r.t. bottom data, if necessary.
+        // 计算bottom数据的梯度，向后传递
         if (propagate_down[i]) {
           this->backward_cpu_gemm(top_diff + n * this->top_dim_, weight,
               bottom_diff + n * this->bottom_dim_);

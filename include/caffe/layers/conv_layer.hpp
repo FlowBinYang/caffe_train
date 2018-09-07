@@ -18,6 +18,15 @@ namespace caffe {
  *   Caffe convolves by reduction to matrix multiplication. This achieves
  *   high-throughput and generality of input and filter dimensions but comes at
  *   the cost of memory for matrices. This makes use of efficiency in BLAS.
+ *   
+ *   Caffe通过还原矩阵乘法来进行卷积运算，实现了输入和卷积核的计算能力提升和维度一致性，但是极大地消耗了内存
+ *
+ *
+ *   im2col：https://blog.csdn.net/mrhiuser/article/details/52672824
+ *   im2col_cpu将c个通道的卷积层输入图像转化为c个通道的矩阵，矩阵的行值为卷积核高*卷积核宽(3×3=9)，
+ *   也就是说，矩阵的单列表征了卷积核操作一次处理的小窗口图像信息；而矩阵的列值为卷积层
+ *   输出单通道图像高*卷积层输出单通道图像宽，表示一共要处理多少个小窗口。
+ *   Caffe中数据是行优先存储
  *
  *   The input is "im2col" transformed to a channel K' x H x W data matrix
  *   for multiplication with the N x K' x H x W filter matrix to yield a

@@ -342,7 +342,7 @@ class Layer {
 
  protected:
   /** The protobuf that stores the layer parameters */
-  LayerParameter layer_param_;      // 配置的层参数
+  LayerParameter layer_param_;      // 配置的层参数  https://github.com/FlowBinYang/caffe_train/blob/master/src/caffe/proto/caffe.proto
   /** The phase: TRAIN or TEST */
   Phase phase_;                     // 当前处在train还是test状态
   /** The vector that stores the learnable parameters as a set of blobs. */

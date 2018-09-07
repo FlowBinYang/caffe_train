@@ -11,7 +11,7 @@ namespace caffe {
 template <typename Dtype>
 void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  // Configure the kernel size, padding, stride, and inputs.
+  // Configure the kernel size, padding, stride, and inputs. 设置卷积核尺寸等参数
   ConvolutionParameter conv_param = this->layer_param_.convolution_param();   // LayerParameter layer_param_; 配置的层参数
   force_nd_im2col_ = conv_param.force_nd_im2col();    // im2col,一般情况下num_spatial_axes_==2,即将2维图像拉成向量，但force_nd_im2col_针对的是更general的情况n-d“图像”
   channel_axis_ = bottom[0]->CanonicalAxisIndex(conv_param.axis());
@@ -21,7 +21,7 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_GE(num_spatial_axes_, 0);
   vector<int> bottom_dim_blob_shape(1, num_spatial_axes_ + 1);
   vector<int> spatial_dim_blob_shape(1, std::max(num_spatial_axes_, 1));
-  // Setup filter kernel dimensions (kernel_shape_).
+  // Setup filter kernel dimensions (kernel_shape_).  设置卷积核维度
   kernel_shape_.Reshape(spatial_dim_blob_shape);
   int* kernel_shape_data = kernel_shape_.mutable_cpu_data();
   if (conv_param.has_kernel_h() || conv_param.has_kernel_w()) {
@@ -45,7 +45,7 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   for (int i = 0; i < num_spatial_axes_; ++i) {
     CHECK_GT(kernel_shape_data[i], 0) << "Filter dimensions must be nonzero.";
   }
-  // Setup stride dimensions (stride_).
+  // Setup stride dimensions (stride_).   设置stride维度
   stride_.Reshape(spatial_dim_blob_shape);
   int* stride_data = stride_.mutable_cpu_data();
   if (conv_param.has_stride_h() || conv_param.has_stride_w()) {
@@ -69,7 +69,7 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       CHECK_GT(stride_data[i], 0) << "Stride dimensions must be nonzero.";
     }
   }
-  // Setup pad dimensions (pad_).
+  // Setup pad dimensions (pad_).   设置pad维度
   pad_.Reshape(spatial_dim_blob_shape);
   int* pad_data = pad_.mutable_cpu_data();
   if (conv_param.has_pad_h() || conv_param.has_pad_w()) {
@@ -92,7 +92,7 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
           conv_param.pad((num_pad_dims == 1) ? 0 : i);
     }
   }
-  // Setup dilation dimensions (dilation_).
+  // Setup dilation dimensions (dilation_).     设置dilation维度
   dilation_.Reshape(spatial_dim_blob_shape);
   int* dilation_data = dilation_.mutable_cpu_data();
   const int num_dilation_dims = conv_param.dilation_size();
@@ -114,7 +114,7 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
         kernel_shape_data[i] == 1 && stride_data[i] == 1 && pad_data[i] == 0;
     if (!is_1x1_) { break; }
   }
-  // Configure output channels and groups.
+  // Configure output channels and groups.      配置channels and groups
   channels_ = bottom[0]->shape(channel_axis_);
   num_output_ = this->layer_param_.convolution_param().num_output();
   CHECK_GT(num_output_, 0);
@@ -196,7 +196,7 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     CHECK(bottom[0]->shape() == bottom[bottom_id]->shape())
         << "All inputs must have the same shape.";
   }
-  // Shape the tops.
+  // Shape the tops.  卷积层应该默认有多少个bottom，就有多少个top
   bottom_shape_ = &bottom[0]->shape();
   compute_output_shape();
   vector<int> top_shape(bottom[0]->shape().begin(),

@@ -425,9 +425,9 @@ int main(int argc, char** argv) {      //argc：命令行总的参数的个数,�
   // Print output to stderr (while still logging).      //argv[0]:指向程序的全路径名; argv[1]:指向在DOS命令行中执行程序名后的第一个字符串; argv[2]:指向第二个字符串
   FLAGS_alsologtostderr = 1;
   // Set version
-  gflags::SetVersionString(AS_STRING(CAFFE_VERSION));
+  gflags::SetVersionString(AS_STRING(CAFFE_VERSION));       // 设置帮助信息，参数错误或者添加 --help选项可以打印帮助信息
   // Usage message.
-  gflags::SetUsageMessage("command line brew\n"
+  gflags::SetUsageMessage("command line brew\n"             // 设置帮助信息，参数错误或者添加 --help选项可以打印帮助信息
       "usage: caffe <command> <args>\n\n"
       "commands:\n"
       "  train           train or finetune a model\n"

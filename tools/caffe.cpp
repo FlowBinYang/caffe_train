@@ -56,24 +56,24 @@ DEFINE_string(sighup_effect, "snapshot",
              "snapshot, stop or none.");
 
 // A simple registry for caffe commands.
-typedef int (*BrewFunction)();
-typedef std::map<caffe::string, BrewFunction> BrewMap;
-BrewMap g_brew_map;
-
+typedef int (*BrewFunction)();                              // 这里定义函数指针类型BrewFunction
+typedef std::map<caffe::string, BrewFunction> BrewMap;      // c++标准map容器，caffe执行的action name与对应函数的映射，容器类型名为BrewMap
+BrewMap g_brew_map;                                         // 声明map容器变量g_brew_map
+                                               // (强烈推荐)caffe中学习宏定义：https://blog.csdn.net/u014114990/article/details/47834507
 #define RegisterBrewFunction(func) \                        // 这个宏在每一个实现主要功能的函数之后将这个函数的名字和对应的函数指针添加到了
 namespace { \                                               // g_brew_map中，分别为train(),test(),device_query(),time(),这里g_brew_map
 class __Registerer_##func { \                               // 的key值为argv[1]，也就是"train"
  public: /* NOLINT */ \
-  __Registerer_##func() { \
-    g_brew_map[#func] = &func; \
+  __Registerer_##func() { \                                 // #用于把参数转换成字符串； ##用于连接前后两个参数  http://www.cnblogs.com/zyore2013/p/7651107.html
+    g_brew_map[#func] = &func; \                            // 将map容器中的 <train, train()> 对应 
   } \
 }; \
 __Registerer_##func g_registerer_##func; \
 }
 
 static BrewFunction GetBrewFunction(const caffe::string& name) {
-  if (g_brew_map.count(name)) {
-    return g_brew_map[name];                                //  
+  if (g_brew_map.count(name)) {                             // map的基本操作函数：.count 返回指定元素出现的次数
+    return g_brew_map[name];                                // 
   } else {
     LOG(ERROR) << "Available caffe actions:";
     for (BrewMap::iterator it = g_brew_map.begin();

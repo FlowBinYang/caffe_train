@@ -46,7 +46,7 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
   CHECK(Caffe::root_solver() || root_solver_)
       << "root_solver_ needs to be set for all non-root solvers";
   LOG_IF(INFO, Caffe::root_solver()) << "Initializing solver from parameters: "
-    << std::endl << param.DebugString();
+    << std::endl << param.DebugString();                        // param.DebugString()输出solver参数
   param_ = param;
   CHECK_GE(param_.average_loss(), 1) << "average_loss should be non-negative.";
   CheckSnapshotWritePermissions();
@@ -89,7 +89,7 @@ void Solver<Dtype>::InitTrainNet() {
   }
   if (param_.has_net()) {
     LOG_IF(INFO, Caffe::root_solver())
-        << "Creating training net from net file: " << param_.net();
+        << "Creating training net from net file: " << param_.net();     // 跳转至net.cpp(Line:58)
     ReadNetParamsFromTextFileOrDie(param_.net(), &net_param);
   }
   // Set the correct NetState.  We start with the solver defaults (lowest
@@ -276,8 +276,8 @@ void Solver<Dtype>::Step(int iters) {
 template <typename Dtype>
 void Solver<Dtype>::Solve(const char* resume_file) {
   CHECK(Caffe::root_solver());
-  LOG(INFO) << "Solving " << net_->name();
-  LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();
+  LOG(INFO) << "Solving " << net_->name();                        // 开始"Solving"
+  LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();    // Learning Rate Policy: step
 
   // Initialize to false every time we start solving.
   requested_early_exit_ = false;

@@ -177,6 +177,11 @@ caffe::SolverAction::Enum GetRequestedAction(
 }
 
 // Train / Finetune a model.
+//
+//
+/*此部分输出可见桌面的训练bug文件，内有训练过程详细记录*/
+//
+//
 int train() {                               // 主要用<Solver>类完成整个训练过程
   CHECK_GT(FLAGS_solver.size(), 0) << "Need a solver definition to train.";  // 需要solver文件来定义训练过程
   CHECK(!FLAGS_snapshot.size() || !FLAGS_weights.size())
@@ -185,7 +190,7 @@ int train() {                               // 主要用<Solver>类完成整个�
   vector<string> stages = get_stages_from_flags();
 
   caffe::SolverParameter solver_param;                                       // 实例化<SolverParameter>类，用于读取solver文件
-  caffe::ReadSolverParamsFromTextFileOrDie(FLAGS_solver, &solver_param);     // 将solver文件读入solver_param
+  caffe::ReadSolverParamsFromTextFileOrDie(FLAGS_solver, &solver_param);     // 解析-solver指定的solver.prototxt的文件内容到solver_param中
 
   solver_param.mutable_train_state()->set_level(FLAGS_level);                // 
   for (int i = 0; i < stages.size(); i++) {
@@ -232,11 +237,11 @@ int train() {                               // 主要用<Solver>类完成整个�
         GetRequestedAction(FLAGS_sigint_effect),
         GetRequestedAction(FLAGS_sighup_effect));
 
-  shared_ptr<caffe::Solver<float> >
+  shared_ptr<caffe::Solver<float> >                                             // 调用构造函数
       solver(caffe::SolverRegistry<float>::CreateSolver(solver_param));         // 创建一个Solver<float>的shared_ptr,调用成员函数时会调用到各个子类(SGDSolver)
-                                                                                // 调用SolverRegistry这个类的静态成员函数CreateSolver构造solver指针所指向的类对象空间
-  solver->SetActionFunction(signal_handler.GetActionFunction());                // solver设置操作函数
-    
+   // static CreatorRegistry* g_registry_ = new CreatorRegistry();              // 调用SolverRegistry(solver_factory.hpp)这个类的静态成员函数CreateSolver构造solver指针所指向的类对象空间
+   // 默认优化type为"SGD",上述代码实例化一个SGDSolver对象(同时调用Solver构造函数)，"SGDSolver"类继承与"Solver"类 (include/sgd_solvers.hpp)
+   // 调用Slover构造函数时会同时调用函数 Init(param); 初始化参数 
   if (FLAGS_snapshot.size()) {                                                  // 从snapshot或者caffemodel恢复模型
     LOG(INFO) << "Resuming from " << FLAGS_snapshot;
     solver->Restore(FLAGS_snapshot.c_str());

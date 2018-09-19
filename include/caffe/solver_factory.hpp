@@ -75,7 +75,7 @@ class SolverRegistry {
     CreatorRegistry& registry = Registry();
     CHECK_EQ(registry.count(type), 1) << "Unknown solver type: " << type
         << " (known types: " << SolverTypeListString() << ")";
-    return registry[type](param);
+    return registry[type](param);                              // static CreatorRegistry* g_registry_ = new CreatorRegistry();
   }
 
   static vector<string> SolverTypeList() {

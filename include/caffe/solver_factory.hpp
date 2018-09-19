@@ -71,7 +71,7 @@ class SolverRegistry {
 
   // Get a solver using a SolverParameter.
   static Solver<Dtype>* CreateSolver(const SolverParameter& param) {
-    const string& type = param.type();
+    const string& type = param.type();                         // 默认为"SGD"
     CreatorRegistry& registry = Registry();
     CHECK_EQ(registry.count(type), 1) << "Unknown solver type: " << type
         << " (known types: " << SolverTypeListString() << ")";

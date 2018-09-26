@@ -15,6 +15,7 @@ namespace caffe {
 /**
  * @brief Applies common transformations to the input data, such as
  * scaling, mirroring, substracting the image mean...
+ * 对输入数据进行常规变换：缩放、镜像以及减去均值
  */
 template <typename Dtype>
 class CPMDataTransformer {
@@ -25,12 +26,14 @@ class CPMDataTransformer {
   /**
    * @brief Initialize the Random number generations if needed by the
    *    transformation.
+   * 初始化随机数生成（如果transformation需要）
    */
   void InitRand();
 
   /**
    * @brief Applies the transformation defined in the data layer's
    * transform_param block to the data.
+   * 在数据层的transform_param参数块应用transformation
    *
    * @param datum
    *    Datum containing the data to be transformed.

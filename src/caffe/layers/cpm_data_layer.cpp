@@ -33,11 +33,11 @@ template <typename Dtype>
 void CPMDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   cpm_data_transformer_.reset(
-     new CPMDataTransformer<Dtype>(cpm_transform_param_, this->phase_));
-  cpm_data_transformer_->InitRand();
+     new CPMDataTransformer<Dtype>(cpm_transform_param_, this->phase_));   // 调用DataLayerSetUp函数的类设置phase为train or test
+  cpm_data_transformer_->InitRand();                                       // cpm_data_transformer_初始化
 
  
-  // Read a data point, and use it to initialize the top blob.
+  // Read a data point, and use it to initialize the top blob.  （读取数据并初始化top blob）
   Datum& datum = *(reader_.full().peek());
   LOG(INFO) << datum.height() << " " << datum.width() << " " << datum.channels();
 
